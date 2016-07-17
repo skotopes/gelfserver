@@ -14,12 +14,16 @@ SOURCES += \
     main.cpp\
     mainwindow.cpp \
     gelfserver.cpp \
-    gelfmessagemodel.cpp
+    gelfmessagemodel.cpp \
+    qjsonmodel.cpp \
+    qjsonitem.cpp
 
 HEADERS  += \
     mainwindow.h \
     gelfserver.h \
-    gelfmessagemodel.h
+    gelfmessagemodel.h \
+    qjsonmodel.h \
+    qjsonitem.h
 
 FORMS    += mainwindow.ui
 

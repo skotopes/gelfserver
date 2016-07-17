@@ -1,5 +1,7 @@
 #include "gelfmessagemodel.h"
 
+#include <QJsonDocument>
+#include <QJsonArray>
 #include <QDateTime>
 #include <QDebug>
 
@@ -10,6 +12,11 @@ GELFMessageModel::GELFMessageModel(QObject *parent):
 {
     // Set common column names
     column_names << "version" << "timestamp" << "host" << "level" << "short_message" << "full_message";
+}
+
+QJsonObject GELFMessageModel::rowData(int row) const
+{
+    return messages[row];
 }
 
 int GELFMessageModel::rowCount(const QModelIndex &/*parent*/) const
@@ -43,6 +50,10 @@ QVariant GELFMessageModel::data(const QModelIndex &index, int role) const
             QDateTime timestamp;
             timestamp.setTime_t(message[column_name].toDouble());
             return timestamp;
+        } else if (message[column_name].isObject()) {
+            return QJsonDocument(message[column_name].toObject()).toJson(QJsonDocument::Compact);
+        } else if (message[column_name].isArray()) {
+            return QJsonDocument(message[column_name].toArray()).toJson(QJsonDocument::Compact);
         } else {
             return message[column_name].toVariant();
         }

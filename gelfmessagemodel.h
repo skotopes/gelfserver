@@ -11,6 +11,7 @@ class GELFMessageModel : public QAbstractTableModel
     Q_OBJECT
 public:
     GELFMessageModel(QObject *parent = 0);
+    QJsonObject rowData(int row) const;
 
 private:
     QStringList column_names;
@@ -22,6 +23,7 @@ protected:
 
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const Q_DECL_OVERRIDE;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const Q_DECL_OVERRIDE;
+
 
 public slots:
     void onMessage(QJsonObject message);

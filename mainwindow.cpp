@@ -3,6 +3,7 @@
 
 #include "gelfserver.h"
 #include "gelfmessagemodel.h"
+#include "qjsonmodel.h"
 
 #include <QSortFilterProxyModel>
 #include <QSystemTrayIcon>
@@ -56,8 +57,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->messagesView->verticalHeader()->setVisible(false);
     ui->messagesView->horizontalHeader()->setStretchLastSection(true);
     ui->messagesView->horizontalHeader()->setSectionsMovable(true);
-    ui->detailsWidget->horizontalHeader()->setStretchLastSection(true);
-    ui->detailsWidget->horizontalHeader()->setVisible(false);
     ui->splitter->setChildrenCollapsible(false);
 
     // Late signals connect
@@ -167,22 +166,13 @@ void MainWindow::onSectionCountChanged(int,int b)
 
 void MainWindow::onCurrentRowChanged(QModelIndex current, QModelIndex /*previous*/)
 {
-    int keys_count = gelf_message_proxy_model->columnCount();
-    ui->detailsWidget->clearContents();
-    ui->detailsWidget->setColumnCount(1);
-    ui->detailsWidget->setRowCount(keys_count);
-    for (int i=0; i < keys_count; i++) {
-        QVariant header = gelf_message_proxy_model->headerData(i, Qt::Horizontal);
-        QVariant data = gelf_message_proxy_model->data(gelf_message_proxy_model->index(current.row(), i));
-
-        qDebug() << this << i << header << data;
-
-        QTableWidgetItem *header_item = new QTableWidgetItem(header.toString());
-        QTableWidgetItem *data_item = new QTableWidgetItem(data.toString());
-
-        ui->detailsWidget->setVerticalHeaderItem(i, header_item);
-        ui->detailsWidget->setItem(i, 0, data_item);
-    }
+    QModelIndex source_index = gelf_message_proxy_model->mapToSource(current);
+    QJsonObject data = gelf_message_model->rowData(source_index.row());
+    qDebug() << data;
+    QJsonModel *model = new QJsonModel;
+    qDebug() << model;
+    model->setJsonObject(data);
+    ui->detailsView->setModel(model);
 }
 
 void MainWindow::onColumnsWidgetItemChange(QListWidgetItem*item)

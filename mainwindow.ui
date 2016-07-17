@@ -88,7 +88,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QTableWidget" name="detailsWidget"/>
+         <widget class="QTreeView" name="detailsView"/>
         </item>
        </layout>
       </widget>
