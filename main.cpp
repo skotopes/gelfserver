@@ -7,6 +7,7 @@ int main(int argc, char *argv[])
     a.setOrganizationName("Plooks Ltd");
     a.setOrganizationDomain("plooks.com");
     a.setApplicationName("GELF Server");
+    a.setWindowIcon(QIcon(":/GELFServer.svg"));
 
     MainWindow w;
     w.show();

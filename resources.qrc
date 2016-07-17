@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>GELFServer.svg</file>
+    </qresource>
+</RCC>

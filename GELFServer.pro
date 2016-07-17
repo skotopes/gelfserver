@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui widgets network
+QT       += core gui widgets network svg
 
 
 TARGET = GELFServer
@@ -24,3 +24,10 @@ HEADERS  += \
 FORMS    += mainwindow.ui
 
 LIBS    += -lz
+
+RESOURCES += \
+    resources.qrc
+
+mac {
+    ICON = GELFServer.icns
+}

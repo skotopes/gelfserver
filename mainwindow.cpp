@@ -5,20 +5,32 @@
 #include "gelfmessagemodel.h"
 
 #include <QSortFilterProxyModel>
+#include <QSystemTrayIcon>
 #include <QSettings>
 #include <QDebug>
+#include <QMenu>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
+    system_tray_menu(new QMenu(this)),
+    system_tray_icon(new QSystemTrayIcon(this)),
     gelf_server(new GELFServer(this)),
     gelf_message_model(new GELFMessageModel(this)),
     gelf_message_proxy_model(new QSortFilterProxyModel(this))
 {
     ui->setupUi(this);
+    // tray menu
+    QAction *action;
+    action = system_tray_menu->addAction(tr("Quit"));
+    connect(action, SIGNAL(triggered(bool)), this, SLOT(close()));
+    // tray icon
+    system_tray_icon->setIcon(QIcon(":/GELFServer.svg"));
+    system_tray_icon->setContextMenu(system_tray_menu);
+    system_tray_icon->show();
 
     // Earlysignals connect
-    connect(gelf_server, SIGNAL(message(QJsonObject)), gelf_message_model, SLOT(onMessage(QJsonObject)));
+    connect(gelf_server, SIGNAL(message(QJsonObject)), this, SLOT(onMessage(QJsonObject)));
     connect(ui->messagesView->horizontalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(onSectionCountChanged(int,int)));
     connect(ui->columnsWidget, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(onColumnsWidgetItemChange(QListWidgetItem*)));
 
@@ -82,6 +94,53 @@ void MainWindow::closeEvent(QCloseEvent *event)
     }
 
     QMainWindow::closeEvent(event);
+}
+
+void MainWindow::onMessage(QJsonObject message)
+{
+    // push data to model
+    gelf_message_model->onMessage(message);
+    // show notification
+    QString title = message["host"].toString() + " ";
+    QSystemTrayIcon::MessageIcon icon = QSystemTrayIcon::Information;
+    int level = message["level"].toInt();
+    switch (level) {
+    case 0: // Emergency
+        icon = QSystemTrayIcon::Critical;
+        title += tr("Emergency");
+        break;
+    case 1: // Alert
+        icon = QSystemTrayIcon::Critical;
+        title += tr("Alert");
+        break;
+    case 2: // Critical
+        icon = QSystemTrayIcon::Critical;
+        title += tr("Critical");
+        break;
+    case 3: // Error
+        icon = QSystemTrayIcon::Critical;
+        title += tr("Error");
+        break;
+    case 4: // Warning
+        icon = QSystemTrayIcon::Warning;
+        title += tr("Warning");
+        break;
+    case 5: // Notice
+        icon = QSystemTrayIcon::Warning;
+        title += tr("Notice");
+        break;
+    case 6: // Informational
+        icon = QSystemTrayIcon::Information;
+        title += tr("Info");
+        break;
+    case 7: // Debug
+        icon = QSystemTrayIcon::Information;
+        title += tr("Debug");
+        break;
+    default:
+        break;
+    }
+    system_tray_icon->showMessage(title, message["full_message"].toString(), icon, 5000);
 }
 
 void MainWindow::onSectionCountChanged(int,int b)
