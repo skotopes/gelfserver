@@ -11,7 +11,16 @@ GELFMessageModel::GELFMessageModel(QObject *parent):
     messages()
 {
     // Set common column names
-    column_names << "version" << "timestamp" << "host" << "level" << "short_message" << "full_message";
+    column_names
+            << "version"
+            << "host"
+            << "short_message"
+            << "full_message"
+            << "timestamp"
+            << "level"
+            << "facility"
+            << "line"
+            << "file";
 }
 
 QJsonObject GELFMessageModel::rowData(int row) const

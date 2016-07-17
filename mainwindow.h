@@ -12,6 +12,7 @@ class MainWindow;
 class GELFServer;
 class GELFMessageModel;
 class GELFMessageProxyModel;
+class QJsonModel;
 
 class QSortFilterProxyModel;
 class QListWidgetItem;
@@ -33,9 +34,11 @@ private:
     Ui::MainWindow *ui;
     QMenu *system_tray_menu;
     QSystemTrayIcon *system_tray_icon;
+
     GELFServer *gelf_server;
     GELFMessageModel *gelf_message_model;
     QSortFilterProxyModel *gelf_message_proxy_model;
+    QJsonModel *gelf_details_model;
 
 private slots:
     void onMessage(QJsonObject);

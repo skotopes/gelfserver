@@ -18,7 +18,8 @@ MainWindow::MainWindow(QWidget *parent) :
     system_tray_icon(new QSystemTrayIcon(this)),
     gelf_server(new GELFServer(this)),
     gelf_message_model(new GELFMessageModel(this)),
-    gelf_message_proxy_model(new QSortFilterProxyModel(this))
+    gelf_message_proxy_model(new QSortFilterProxyModel(this)),
+    gelf_details_model(new QJsonModel(this))
 {
     ui->setupUi(this);
     // tray menu
@@ -35,20 +36,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->messagesView->horizontalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(onSectionCountChanged(int,int)));
     connect(ui->columnsWidget, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(onColumnsWidgetItemChange(QListWidgetItem*)));
 
-    // configure model
+    // configure model and views
     gelf_message_proxy_model->setSourceModel(gelf_message_model);
-
-    // configure table view
     ui->messagesView->setModel(gelf_message_proxy_model);
-
-    // load configuration
-    QSettings settings;
-    restoreState(settings.value("MainWindow/state").toByteArray());
-    restoreGeometry(settings.value("MainWindow/geometry").toByteArray());
-    ui->splitter->restoreState(settings.value("MainWindow/splitter/state").toByteArray());
-    ui->splitter->restoreGeometry(settings.value("MainWindow/splitter/geometry").toByteArray());
-    ui->messagesView->horizontalHeader()->restoreState(settings.value("MainWindow/messagesView/state").toByteArray());
-    ui->messagesView->horizontalHeader()->restoreGeometry(settings.value("MainWindow/messagesView/geometry").toByteArray());
+    ui->detailsView->setModel(gelf_details_model);
 
     // finalize UI setttings
     ui->messagesView->setSortingEnabled(true);
@@ -58,6 +49,17 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->messagesView->horizontalHeader()->setStretchLastSection(true);
     ui->messagesView->horizontalHeader()->setSectionsMovable(true);
     ui->splitter->setChildrenCollapsible(false);
+
+    // load configuration
+    QSettings settings;
+    restoreState(settings.value("MainWindow/state").toByteArray());
+    restoreGeometry(settings.value("MainWindow/geometry").toByteArray());
+    ui->splitter->restoreState(settings.value("MainWindow/splitter/state").toByteArray());
+    ui->splitter->restoreGeometry(settings.value("MainWindow/splitter/geometry").toByteArray());
+    ui->detailsView->header()->restoreState(settings.value("MainWindow/detailsView/state").toByteArray());
+    ui->detailsView->header()->restoreGeometry(settings.value("MainWindow/detailsView/geometry").toByteArray());
+    ui->messagesView->horizontalHeader()->restoreState(settings.value("MainWindow/messagesView/state").toByteArray());
+    ui->messagesView->horizontalHeader()->restoreGeometry(settings.value("MainWindow/messagesView/geometry").toByteArray());
 
     // Late signals connect
     connect(ui->messagesView->selectionModel(), SIGNAL(currentRowChanged(QModelIndex,QModelIndex)),
@@ -76,6 +78,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
     // views and widget state
     settings.setValue("MainWindow/messagesView/geometry", ui->messagesView->horizontalHeader()->saveGeometry());
     settings.setValue("MainWindow/messagesView/state", ui->messagesView->horizontalHeader()->saveState());
+    settings.setValue("MainWindow/detailsView/geometry", ui->detailsView->header()->saveGeometry());
+    settings.setValue("MainWindow/detailsView/state", ui->detailsView->header()->saveState());
     settings.setValue("MainWindow/splitter/geometry", ui->splitter->saveGeometry());
     settings.setValue("MainWindow/splitter/state", ui->splitter->saveState());
     settings.setValue("MainWindow/geometry", saveGeometry());
@@ -153,7 +157,14 @@ void MainWindow::onSectionCountChanged(int,int b)
         item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
         item->setData(Qt::UserRole, i);
 
-        bool column_enabled = settings.value("MainWindow/columns/" + header_name, true).toBool();
+        bool column_enabled = false;
+        if (settings.contains("MainWindow/columns/" + header_name)) {
+            column_enabled = settings.value("MainWindow/columns/" + header_name, false).toBool();
+        } else {
+            if (header_name == "host" || header_name == "short_message" || header_name == "timestamp") {
+                column_enabled = true;
+            }
+        }
         if (column_enabled) {
             item->setCheckState(Qt::Checked);
             ui->messagesView->horizontalHeader()->setSectionHidden(i, false);
@@ -168,11 +179,7 @@ void MainWindow::onCurrentRowChanged(QModelIndex current, QModelIndex /*previous
 {
     QModelIndex source_index = gelf_message_proxy_model->mapToSource(current);
     QJsonObject data = gelf_message_model->rowData(source_index.row());
-    qDebug() << data;
-    QJsonModel *model = new QJsonModel;
-    qDebug() << model;
-    model->setJsonObject(data);
-    ui->detailsView->setModel(model);
+    gelf_details_model->setJsonObject(data);
 }
 
 void MainWindow::onColumnsWidgetItemChange(QListWidgetItem*item)

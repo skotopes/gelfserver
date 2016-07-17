@@ -66,9 +66,6 @@ void GELFServer::readPendingDatagrams()
                      << "port" << senderPort
                      << "keys" << keys;
         }
-        // Add UDP datagram information
-        message_object.insert("sender_host", QJsonValue::fromVariant(sender.toString()));
-        message_object.insert("sender_port", QJsonValue::fromVariant(senderPort));
         // emit message
         emit message(message_object);
     }
